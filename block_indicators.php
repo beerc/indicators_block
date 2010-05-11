@@ -1,10 +1,5 @@
-<?php //$Id: block_online_users.php,v 1.54.2.7 2009/11/20 03:08:59 andyjdavis Exp $
+<?php //$Id: block_indicators.php,v0.1 2010/05/11 ColinBeer
 
-/**
- * This block needs to be reworked.
- * The new roles system does away with the concepts of rigid student and
- * teacher roles.
- */
 class block_indicators extends block_base {
     function init() {
         $this->title = get_string('Indicators','block_indicators');
@@ -22,14 +17,13 @@ class block_indicators extends block_base {
         {
             return $this->content;
         }
-        
-        //Check the user level
+        /////Check the user level and separate students and staff
         $context = get_context_instance(CONTEXT_COURSE,$SESSION->cal_course_referer);
         if ($roles = get_user_roles($context, $USER->id))
         {
           foreach ($roles as $role)
           {
-            if($role->roleid != 5 )
+            if($role->roleid != 5 ) // This needs rethinking to cope with other roles
             {
               $canview=1;
             } 
@@ -37,31 +31,40 @@ class block_indicators extends block_base {
         }
         if($canview == 1)
         {
-          ///// THE STAFF SECTION
+        ///// THE STAFF SECTION
           $this->content->text .= "<br>Staff";
           $this->content->text .= "<br><br>Under Construction";
+          //get the total number of staff in this term
+          
+          //get the average hits for the staff in this term
+          
+          //get the hits for this user in this term
+          
+          //get the average forum posts and replies for staff this term
+          
+          //get the number of posts and replies for this user
           
         } else
         {
-          ///// THE STUDENT SECTION /////
+        ///// THE STUDENT SECTION /////
+          
           $this->content->text .= "Effort Tracker for $USER->username";
-          //Get the number of students
-          $SQL="SELECT COUNT(*) FROM {$CFG->prefix}LOG WHERE COURSE='$COURSE->id'"; //***** Needs work to ensure only student results are returned
-          $result=count_records_sql($SQL);
-          //$this->content->text=$USER->username." ";
-          //$this->content->text .= $result;
-          ////Get this users count
+          
+          ////Get this users hitcount
           $SQL="SELECT COUNT(*) FROM {$CFG->prefix}LOG WHERE COURSE='$COURSE->id' and userid='$USER->id'";
           $studentresult=count_records_sql($SQL);
           
-          //Get the average for all users
-          $SQL="SELECT (count(*)/count(distinct(userid))) FROM {$CFG->prefix}LOG WHERE COURSE='$COURSE->id'"; //***** Needs work tis crappy
+          //Get the average for all student users
+          $SQL="SELECT (count(*)/count(distinct(userid))) FROM {$CFG->prefix}LOG WHERE COURSE='$COURSE->id' and userid in (select userid from {$CFG->prefix}role_assignments where contextid in
+                (select id from {$CFG->prefix}context where contextlevel='50' and instanceid ='3')
+                and roleid in  (select id from {$CFG->prefix}role where name='Student'))"; //***** Needs work tis crappy
           //$SQL="select count(*) from {$CFG->prefix}log where userid in (select id from {$CFG->prefix}context where contextlevel='50' and instanceid ='$USER->id')"; //***** Needs work tis crappy
           $avg=round(count_records_sql($SQL));
-          $muliplier=round(100/$avg);
+          echo $avg;
+          $muliplier=(100/(2*$avg));
           $studentresult=round($studentresult*$muliplier);
-          //$this->content->text .= "<br>$studentresult $avg";
-          $this->content->text .= "<br><img src=\"http://chart.apis.google.com/chart?chs=170x60&chd=t:$studentresult&cht=gom\"</img>";        
+          //$this->content->text .= "<br>$avg $studentresult";
+          $this->content->text .= "<br><img src=\"http://chart.apis.google.com/chart?chs=170x70&chd=t:$studentresult&cht=gom&chf=bg,s,EFEFEF&chxt=x,y&chxl=0:||1:|Low||High\"</img>";        
         }
         
         ////Get this users count
